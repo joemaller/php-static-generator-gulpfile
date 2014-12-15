@@ -4,18 +4,22 @@ This project is mostly a proof of concept showing how to use [Gulp][] to render 
 
 ##### What this does
 - Complete 1-to-1 mirroring of an arbitrarily nested directory structure, including auto-removal of deleted and renamed files
+- Correct referencing of nested includes
 - Starts a local webserver with LiveReload, including automatic middleware injection of LiveReload code snippets
 - Copying static files to the build directory
-- Auto-compilation of Sass stylesheets
-- Markdown pre-processing of HTML output
+- Auto-compilation of Sass stylesheets with external source maps
+- Markdown pre-processing of HTML output (pending)
+- Auto-restarts gulp from `gulp watch` when **gulpfile.js** changes
 
 ##### What this doesn't do
-- There’s not much of anything in PHP's global `$_SERVER` array. But you weren't counting on that anyway. Right?
+- There’s not much of anything in PHP's global `$_SERVER` array. But you weren't counting on that anyway. Right? Magic PHP variables `__FILE__` and `__DIR__` don't work.
+- There's no dependency-graph of includes, changing a nested file won't trigger a re-render of the files that reference it. If you've got a directory of include files, add a `watch` that calls the `php` task.
+- [phpinfo() outputs plain text][phpinfo] instead of HTML when using the CLI mode.
 
 
 ## Working with Gulp
 
-The gulpfile contains several tasks, these are the main ones that combine to do most of the work:
+These are the main gulpfile tasks which combine to do most of the work:
 
 * `gulp build` - Builds a fresh copy of the site, after first cleaning out any existing build files.
 * `gulp watch` - Starts a local webserver to preview changes. `gulp build` is automatically run when the server starts up.
@@ -50,3 +54,5 @@ You need to have node and PHP installed. Mac instructions are below. If you're o
 [node.js]: http://nodejs.org/
 [install PHP]: https://github.com/Homebrew/homebrew-php#installation
 [gulp]: http://gulpjs.com/
+
+[phpinfo]: http://php.net/manual/en/function.phpinfo.php#refsect1-function.phpinfo-notes
