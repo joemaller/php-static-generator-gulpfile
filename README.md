@@ -1,6 +1,6 @@
 # PHP static generator gulpfile
 
-This project is mostly a proof of concept showing how to use [Gulp][] to render a collection of PHP files to static HTML. A simple gulpfile linking to a few modules from Gulp's vibrant ecosystem make it easy to add extras like a LiveReload integrated local webserver, Sass compilation and markdown rendering.
+This project is mostly a proof of concept showing how to use [Gulp][] to render a collection of PHP files to static HTML. A simple gulpfile linking to a few modules from Gulp's vibrant ecosystem make it easy to add extras like a LiveReload integrated local webserver, static file copying and automatic Sass compilation.
 
 ##### What this does
 - Complete 1-to-1 mirroring of an arbitrarily nested directory structure, including auto-removal of deleted and renamed files
@@ -8,7 +8,6 @@ This project is mostly a proof of concept showing how to use [Gulp][] to render 
 - Starts a local webserver with LiveReload, including automatic middleware injection of LiveReload code snippets
 - Copying static files to the build directory
 - Auto-compilation of Sass stylesheets with external source maps
-- Markdown pre-processing of HTML output (pending)
 - Auto-restarts gulp from `gulp watch` when **gulpfile.js** changes
 
 ##### What this doesn't do
