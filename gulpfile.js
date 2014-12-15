@@ -105,10 +105,11 @@ gulp.task('build', function(cb) {
 /**
  * renders PHP files by piping them through the PHP command line binary
  * @param  {glob} target gulp.src compatible glob or string of PHP source files
+ * @param  {object} opts gulp.src options object, usually used to set the base dir {base: dir}
  * @return {stream}        returns a through2 stream of vinyl files
  */
-var renderPHP = function(target) {
-  return gulp.src(target)
+var renderPHP = function(target, opts) {
+  return gulp.src(target, opts)
     .pipe(through.obj(function(file, enc, cb) {
       var startTime = process.hrtime();
       var contents = new Buffer(0); // init an empty buffer
@@ -201,17 +202,33 @@ gulp.task('watch', ['webserver'], function() {
   // see the note above the gulp-reload task before enabling this
   // gulp.watch('gulpfile.js', ['gulp-reload']);
 
-  gulp.watch(PHP_FILES, function(event) {
-    return renderPHP(event.path)
-      .pipe(gulp.dest(BUILD_DIR));
-  });
+  // Process PHP files
+  gulp.watch(PHP_FILES)
+    .on('change', function(event) {
+      if (event.type === 'added' || event.type === 'changed') {
+        renderPHP(event.path, {base: SRC_DIR})
+          .pipe(gulp.dest(BUILD_DIR));
+      }
+      // This could just nuke BUILD_DIR with "clean" and then rebuild,
+      // but that seemed like overkill
+      if (event.type == 'deleted') {
+        var srcfile = path.relative(SRC_DIR, event.path);
+        var destfile = srcfile.replace(/php$/, 'html');
+        del(path.join(BUILD_DIR, destfile), function() {
+          gutil.log(
+            "PHP:", chalk.magenta(srcfile),
+            "was removed, removing", chalk.magenta(destfile));
+        });
+      }
+    });
 
+  // Re-compile SCSS on change
   gulp.watch(SASS_FILES, ['sass']);
 
+  // Move static files on change
+  gulp.watch(STATIC_ASSETS, ['copy']);
+
+  // trigger livereload whenever files in BUILD_DIR change
   gulp.watch([path.join(BUILD_DIR, '/**/*')])
-    .on('change', livereload.changed)
-    .on('delete', function() {
-      console.log('in delete');
-      console.log(arguments);
-    });
+    .on('change', livereload.changed);
 });

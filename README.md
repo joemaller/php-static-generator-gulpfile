@@ -1,6 +1,6 @@
 # PHP static generator gulpfile
 
-This project is mostly a proof of concept showing how to use [Gulp][] to render a collection of PHP files to static HTML. A simple gulpfile linking to a few modules from in Gulp's vibrant ecosystem make it easy to add extras like a LiveReload integrated local webserver, Sass compilation and markdown rendering.
+This project is mostly a proof of concept showing how to use [Gulp][] to render a collection of PHP files to static HTML. A simple gulpfile linking to a few modules from Gulp's vibrant ecosystem make it easy to add extras like a LiveReload integrated local webserver, Sass compilation and markdown rendering.
 
 ##### What this does
 - Complete 1-to-1 mirroring of an arbitrarily nested directory structure, including auto-removal of deleted and renamed files
@@ -12,7 +12,7 @@ This project is mostly a proof of concept showing how to use [Gulp][] to render 
 - Auto-restarts gulp from `gulp watch` when **gulpfile.js** changes
 
 ##### What this doesn't do
-- There’s not much of anything in PHP's global `$_SERVER` array. But you weren't counting on that anyway. Right? Magic PHP variables `__FILE__` and `__DIR__` don't work.
+- There’s not much of anything in PHP's global `$_SERVER` array. But you weren't counting on that anyway. Right? Magic PHP variables `__FILE__` and `__DIR__` also don't work.
 - There's no dependency-graph of includes, changing a nested file won't trigger a re-render of the files that reference it. If you've got a directory of include files, add a `watch` that calls the `php` task.
 - [phpinfo() outputs plain text][phpinfo] instead of HTML when using the CLI mode.
 
