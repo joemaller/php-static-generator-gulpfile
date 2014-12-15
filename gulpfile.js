@@ -40,8 +40,9 @@ var SASS_DIR = './sass';
 var SASS_FILES = './sass/**/*.scss';
 var PHP_FILES = path.join(SRC_DIR, '**/*.php');
 var STATIC_ASSETS = [
-  path.join(SRC_DIR, '**'),   // everything...
-  '!' + PHP_FILES             // ...except PHP_FILES
+  path.join(SRC_DIR, '**'),       // everything...
+  '!' + PHP_FILES,                // ...except PHP_FILES
+  '!' + SRC_DIR + '/templates/**' // ...and template files
 ];
 
 
@@ -227,6 +228,9 @@ gulp.task('watch', ['webserver'], function() {
 
   // Move static files on change
   gulp.watch(STATIC_ASSETS, ['copy']);
+
+  // Silly Twig templating example
+  gulp.watch(SRC_DIR + '/**/*.twig', ['php']);
 
   // trigger livereload whenever files in BUILD_DIR change
   gulp.watch([path.join(BUILD_DIR, '/**/*')])

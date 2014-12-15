@@ -48,10 +48,22 @@ You need to have node and PHP installed. Mac instructions are below. If you're o
     * `brew install php55` or `brew install php56`
 
 
+## Additional notes
+
+##### Composer
+[Composer][] works just fine. Be sure to reference the autoloader like this:
+
+    require get_include_path() . '/../vendor/autoload.php';
+
+##### Two to the power of 276,709 to one against
+
+This example is completely insane, and deeply irresponsible: The **source/twig.php** file demonstrates how the gulpfile can be used to render a flat HTML file from a PHP file linking to a [Twig template][twig] that includes two sub-templates. There is absolutely no reason anyone should ever do this. Madness.
+
 [xcode]: https://itunes.apple.com/us/app/xcode/id497799835?mt=12
 [homebrew]: http://brew.sh/
 [node.js]: http://nodejs.org/
 [install PHP]: https://github.com/Homebrew/homebrew-php#installation
 [gulp]: http://gulpjs.com/
-
+[twig]: http://twig.sensiolabs.org/
 [phpinfo]: http://php.net/manual/en/function.phpinfo.php#refsect1-function.phpinfo-notes
+[composer]: http://getcomposer.org

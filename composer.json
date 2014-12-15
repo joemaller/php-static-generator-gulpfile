@@ -1,0 +1,6 @@
+{
+    "require": {
+        "raveren/kint": "0.9.*@dev",
+        "twig/twig": "1.16.*@dev"
+    }
+}
