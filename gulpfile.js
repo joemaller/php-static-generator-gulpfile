@@ -7,7 +7,6 @@
  */
 var http = require('http');
 var path = require('path');
-var os = require('os');
 var spawn = require('child_process').spawn;
 
 
@@ -36,7 +35,6 @@ var serveStatic = require('serve-static');
 var LOCAL_PORT = 9001;
 var SRC_DIR = './source';
 var BUILD_DIR = './build';
-var SASS_DIR = './sass';
 var SASS_FILES = './sass/**/*.scss';
 var PHP_FILES = path.join(SRC_DIR, '**/*.php');
 var STATIC_ASSETS = [
@@ -184,7 +182,7 @@ gulp.task('webserver', ['build'], function() {
     gutil.log(
       "Local webserver listening on:",
       chalk.magenta(LOCAL_PORT),
-      '(http://' + os.hostname().toLowerCase() + ':' + LOCAL_PORT + ')'
+      '(http://localhost:' + LOCAL_PORT + ')'
     );
   };
   var app = connect()
