@@ -3,7 +3,7 @@
 'use strict';
 
 /**
- * Node code modules
+ * Node core modules
  */
 var http = require('http');
 var path = require('path');
@@ -61,7 +61,6 @@ gulp.task('sass', function() {
     );
   };
 
-  // return gulp.src(path.join(SASS_DIR, '**/*.scss'))
   return gulp.src(SASS_FILES)
     .pipe(sourcemaps.init())
     .pipe(sass({
