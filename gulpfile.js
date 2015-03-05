@@ -1,4 +1,6 @@
 /*jshint node:true, unused:true */
+/*eslint-env node, browser */
+/*eslint quotes: [1, "single"] */
 
 'use strict';
 
