@@ -206,7 +206,7 @@ gulp.task('php', function() {
  */
 gulp.task('watch', ['build'], function() {
   browserSync({
-    host: os.hostname().toLowerCase() + '.local',
+    host: os.hostname().replace(/(\.local)*$/i, '.local'),
     open: false,
     logConnections: true,
     server: './build'
