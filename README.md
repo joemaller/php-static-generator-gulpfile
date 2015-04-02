@@ -1,18 +1,16 @@
 # PHP static generator gulpfile
 
-This project is mostly a proof of concept showing how to use [Gulp][] to render a collection of PHP files to static HTML. A simple gulpfile linking to a few modules from Gulp's vibrant ecosystem make it easy to add extras like a LiveReload integrated local webserver, static file copying and automatic Sass compilation.
+This project is mostly a proof of concept showing how to use [Gulp][] to render a collection of PHP files to static HTML. A simple gulpfile linking to a few modules from Gulp's vibrant ecosystem make it easy to add extras like a local auto-reloading BrowserSync webserver, static file copying and automatic Sass compilation.
 
 ##### What this does
-- Complete 1-to-1 mirroring of an arbitrarily nested directory structure, including auto-removal of deleted and renamed files
+- Complete 1-to-1 mirroring of an arbitrarily nested directory of PHP source files, including auto-removal of deleted and renamed files
 - Correct referencing of nested includes
-- Starts a local webserver with LiveReload, including automatic middleware injection of LiveReload code snippets
-- Copying static files to the build directory
-- Auto-compilation of Sass stylesheets with external source maps
-- Auto-restarts gulp from `gulp watch` when **gulpfile.js** changes
+- Static file mirroring
+- Starts a local [BrowserSync][] webserver
 
 ##### What this doesn't do
 - There’s not much of anything in PHP's global `$_SERVER` array. But you weren't counting on that anyway. Right? Magic PHP variables `__FILE__` and `__DIR__` also don't work.
-- There's no dependency-graph of includes, changing a nested file won't trigger a re-render of the files that reference it. If you've got a directory of include files, add a `watch` that calls the `php` task.
+- There's no dependency-graph of includes, changing a nested file won't trigger a re-render of the files that reference it. If you've got a directory of include files, add a `watch` that calls the `php` task to rebuild everything if those files change.
 - [phpinfo() outputs plain text][phpinfo] instead of HTML when using the CLI mode.
 
 
@@ -34,7 +32,7 @@ These are the main gulpfile tasks which combine to do most of the work:
 
 
 ## Prerequisites
-You need to have node and PHP installed. Mac instructions are below. If you're on Linux, you probabaly already know this. I've never set these up on Windows, so I can't help there.
+You need to have node and PHP installed. Mac instructions are below. If you're on Linux, you probably already know this. I've never set these up on Windows, so I can't help there.
 
 #### Mac Setup instructions
 
@@ -57,7 +55,7 @@ You need to have node and PHP installed. Mac instructions are below. If you're o
 
 ##### Two to the power of 276,709 to one against
 
-This example is completely insane, and deeply irresponsible: The **source/twig.php** file demonstrates how the gulpfile can be used to render a flat HTML file from a PHP file linking to a [Twig template][twig] that includes two sub-templates. There is absolutely no reason anyone should ever do this. Madness.
+This example is completely insane, and deeply irresponsible: The **source/twig.php** file demonstrates how the gulpfile can be used to render a flat HTML file from a PHP file linking to a [Twig template][twig] which includes two sub-templates. There is absolutely no reason anyone should ever do this. Madness.
 
 [xcode]: https://itunes.apple.com/us/app/xcode/id497799835?mt=12
 [homebrew]: http://brew.sh/
@@ -67,3 +65,5 @@ This example is completely insane, and deeply irresponsible: The **source/twig.p
 [twig]: http://twig.sensiolabs.org/
 [phpinfo]: http://php.net/manual/en/function.phpinfo.php#refsect1-function.phpinfo-notes
 [composer]: http://getcomposer.org
+[browsersync]: http://www.browsersync.io
+

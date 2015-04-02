@@ -7,7 +7,7 @@
 /**
  * Node core modules
  */
-var http = require('http');
+var os = require('os');
 var path = require('path');
 var spawn = require('child_process').spawn;
 
@@ -15,26 +15,23 @@ var spawn = require('child_process').spawn;
 /**
  * npm packaged modules
  */
-var _ = require('lodash');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
+var filter = require('gulp-filter');
+var chalk = gutil.colors;
 var runSequence = require('run-sequence');
 var through = require('through2');
 var del = require('del');
 var sass = require('gulp-sass');
 var sourcemaps = require('gulp-sourcemaps');
-var livereload = require('gulp-livereload');
 var prettyHrtime = require('pretty-hrtime');
-var chalk = require('chalk');
-var connect = require('connect');
-var connectLiveReload = require('connect-livereload');
-var serveStatic = require('serve-static');
+var browserSync = require('browser-sync');
+var reloadStream = browserSync.reload.bind(null, {stream: true});
 
 
 /**
  * Constants
  */
-var LOCAL_PORT = 9001;
 var SRC_DIR = './source';
 var BUILD_DIR = './build';
 var SASS_FILES = './sass/**/*.scss';
@@ -51,14 +48,10 @@ var STATIC_ASSETS = [
  */
 gulp.task('sass', function() {
   var sassErrorReporter = function(err) {
-    err = err.match(/([^:]+):(\d+):(\d*)\s*(.*)/);
-    err = _.zipObject(['input', 'abspath', 'line', 'char', 'message'], err);
-    err.path = path.relative(process.cwd(), err.abspath);
+    err.path = path.relative(process.cwd(), err.file);
     gutil.log(
       chalk.red('Sass Error:'),
-      chalk.magenta(err.path) + ':' +
-      chalk.cyan(err.line) + ':' +
-      chalk.cyan(err.char),
+      chalk.magenta(err.path) + ':' + chalk.cyan(err.line) + ':' + chalk.cyan(err.column),
       err.message
     );
   };
@@ -71,6 +64,8 @@ gulp.task('sass', function() {
     }))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(path.join(BUILD_DIR, 'css')))
+    .pipe(filter('**/*.css'))
+    .pipe(reloadStream())
     .on('data', function(data) {
       gutil.log('Sass: compiled', chalk.magenta(data.relative));
     });
@@ -78,7 +73,7 @@ gulp.task('sass', function() {
 
 
 /**
- * clean removes the build directory
+ * remove the build directory
  */
 gulp.task('clean', function(cb) {
   del(BUILD_DIR, cb);
@@ -86,20 +81,26 @@ gulp.task('clean', function(cb) {
 
 
 /**
- * copies STATIC_ASSETS to BUILD_DIR using relative paths (so things stay nested)
+ * copy STATIC_ASSETS to BUILD_DIR using relative paths (so things stay nested)
  */
 gulp.task('copy', function() {
-  gulp.src(STATIC_ASSETS, {base: SRC_DIR}) // base tells gulp to copy with relative paths
+  return gulp.src(STATIC_ASSETS, {base: SRC_DIR}) // base tells gulp to copy with relative paths
     .pipe(gulp.dest(BUILD_DIR));
 });
 
+/**
+ * A reload utility task, used to fire browserSync after the copy task
+ */
+gulp.task('browserSync reload', ['copy'], browserSync.reload);
+
 
 /**
- * build just lumps together other tasks: clean, then php, sass and copy
+ * this just lumps together other tasks: clean, then php, sass and copy
  */
 gulp.task('build', function(cb) {
-  runSequence('clean', 'copy', ['php', 'sass'], cb);
+  runSequence('clean', 'copy', ['php', 'sass'], 'browserSync reload', cb);
 });
+
 
 
 /**
@@ -129,7 +130,7 @@ var renderPHP = function(target, opts) {
           file = null; // return null to remove empty files from the stream
           gutil.log(
             'PHP: Dropping', chalk.magenta(relfile),
-            "because PHP returned no content after", hrtimeMagenta(startTime)
+            'because PHP returned no content after', hrtimeMagenta(startTime)
           );
         }
       });
@@ -141,8 +142,8 @@ var renderPHP = function(target, opts) {
 
           file.contents = contents;
           gutil.log(
-            "PHP: Rendered", chalk.magenta(oldFile),
-            "to", chalk.magenta(file.relative),
+            'PHP: Rendered', chalk.magenta(oldFile),
+            'to', chalk.magenta(file.relative),
             'after', hrtimeMagenta(startTime)
           );
         }
@@ -155,7 +156,7 @@ var renderPHP = function(target, opts) {
 
 
 /**
- * php calls renderPHP() for all files in the PHP_FILES glob
+ * php calls renderPHP() with all files in the PHP_FILES glob
  */
 gulp.task('php', function() {
   return renderPHP(PHP_FILES)
@@ -164,60 +165,33 @@ gulp.task('php', function() {
 
 
 /**
- * gulp-reload auto-reloads the gulpfile on change, called from 'watch'
- * This is horribly unstable and will leave an orphaned
- * gulp process running after `gulp watch` exits
- */
-gulp.task('gulp-reload', function() {
-  spawn('gulp', ['watch'], {stdio: 'inherit'});
-  process.exit();
-});
-
-
-/**
- * gulp webserver - start up a livereload-enabled webserver.
- * The connect-livereload middleware injects the livereload snippet
- */
-gulp.task('webserver', ['build'], function() {
-  var reporter = function() {
-    gutil.log(
-      "Local webserver listening on:",
-      chalk.magenta(LOCAL_PORT),
-      '(http://localhost:' + LOCAL_PORT + ')'
-    );
-  };
-  var app = connect()
-    .use(connectLiveReload())
-    .use(serveStatic(BUILD_DIR));
-  http.createServer(app).listen(LOCAL_PORT, null, null, reporter);
-});
-
-
-/**
  * The main watch task, tracks and responds to changes in source files
  */
-gulp.task('watch', ['webserver'], function() {
-  livereload.listen();
-
-  // see the note above the gulp-reload task before enabling this
-  // gulp.watch('gulpfile.js', ['gulp-reload']);
+gulp.task('watch', ['build'], function() {
+  browserSync({
+    host: os.hostname().toLowerCase() + '.local',
+    open: false,
+    logConnections: true,
+    server: './build'
+  });
 
   // Process PHP files
   gulp.watch(PHP_FILES)
     .on('change', function(event) {
       if (event.type === 'added' || event.type === 'changed') {
         renderPHP(event.path, {base: SRC_DIR})
-          .pipe(gulp.dest(BUILD_DIR));
+          .pipe(gulp.dest(BUILD_DIR))
+          .pipe(reloadStream());
       }
       // This could just nuke BUILD_DIR with "clean" and then rebuild,
       // but that seemed like overkill
-      if (event.type == 'deleted') {
+      if (event.type === 'deleted') {
         var srcfile = path.relative(SRC_DIR, event.path);
         var destfile = srcfile.replace(/php$/, 'html');
         del(path.join(BUILD_DIR, destfile), function() {
           gutil.log(
-            "PHP:", chalk.magenta(srcfile),
-            "was removed, removing", chalk.magenta(destfile));
+            'PHP:', chalk.magenta(srcfile),
+            'was removed, removing', chalk.magenta(destfile));
         });
       }
     });
@@ -226,12 +200,9 @@ gulp.task('watch', ['webserver'], function() {
   gulp.watch(SASS_FILES, ['sass']);
 
   // Move static files on change
-  gulp.watch(STATIC_ASSETS, ['copy']);
+  gulp.watch(STATIC_ASSETS, ['copy', 'browserSync reload']);
 
   // Silly Twig templating example
   gulp.watch(SRC_DIR + '/**/*.twig', ['php']);
 
-  // trigger livereload whenever files in BUILD_DIR change
-  gulp.watch([path.join(BUILD_DIR, '/**/*')])
-    .on('change', livereload.changed);
 });
