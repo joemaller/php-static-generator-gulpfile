@@ -102,6 +102,26 @@ gulp.task('build', function(cb) {
 });
 
 
+/**
+ * Cleans up PHP rendering errors and
+ * @param  buffer err a possibly concatenated set of PHP errors
+ * @return object     Object contains error message, file path and line number
+ */
+var formatPHPError = function(err) {
+  return err
+    .toString()
+    .match(/\n\n[^\n]+\n\n/g)
+    .map(function(e) {
+      var parts = e.match(/\s+([^:]*):\s*(.*)(?: in )(.*)(?: on line )(\d+)\s+$/);
+      return {
+        level: parts[1],
+        error: parts[2],
+        path: path.relative(process.cwd(), parts[3]),
+        line: parts[4]
+      };
+    });
+};
+
 
 /**
  * renders PHP files by piping them through the PHP command line binary
@@ -114,8 +134,11 @@ var renderPHP = function(target, opts) {
     .pipe(through.obj(function(file, enc, cb) {
       var startTime = process.hrtime();
       var contents = new Buffer(0); // init an empty buffer
-      var php = spawn('php', ['-d', 'include_path=' + path.dirname(file.path)]);
-
+      var errors = new Buffer(0); // init an empty buffer
+      var php = spawn('php', [
+        '-d', 'include_path=' + path.dirname(file.path),
+        '-d', 'display_errors=stderr'
+      ]);
       var hrtimeMagenta = function(time) {
         return chalk.magenta(prettyHrtime(process.hrtime(time)));
       };
@@ -135,15 +158,29 @@ var renderPHP = function(target, opts) {
         }
       });
 
+      php.stderr.on('data', function(data) {
+        errors = Buffer.concat([errors, data]);
+      });
+
+      php.stderr.on('end', function() {
+        if (errors.length) {
+          formatPHPError(errors).forEach(function(e) {
+            gutil.log(
+              'PHP ' + e.level + ': ' +
+              chalk.magenta(e.path) + ':' + chalk.cyan(e.line) +
+              ' in ' + chalk.magenta(file.relative) + ' ' +
+              e.error);
+          });
+        }
+      });
+
       php.on('close', function() {
         if (contents.length) {
           var oldFile = file.relative;
           file.path = file.path.replace(/php$/, 'html');
-
           file.contents = contents;
           gutil.log(
             'PHP: Rendered', chalk.magenta(oldFile),
-            'to', chalk.magenta(file.relative),
             'after', hrtimeMagenta(startTime)
           );
         }
